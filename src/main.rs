@@ -13,24 +13,31 @@ use link::Link;
 
 //const GRAVITY: f32 = 100.;
 
-fn populate_particles(particles: Vec<Particle>) {
+fn populate_particles(mut particles: Vec<Rc<RefCell<Particle>>>, num: u32) {
+    for i in 0..=num {
+        particles.push(Rc::new(RefCell::new(Particle::new(Vector2f::new(100. * i as f32, 300.)))));
+    }
+}
+
+fn populate_links(links: Vec<Link>, particles: Vec<Rc<RefCell<Particle>>>) {
 
 }
 
-fn populate_links(links: Vec<Link>) {
+fn apply_forces(particles: Vec<Rc<RefCell<Particle>>>) {
+    for particle in particles {
+        let mut borrowed = particle.borrow_mut();
+        // borrowed.apply_force(Vector2f::new(0., GRAVITY));
+        borrowed.apply_force(Vector2f::new(1., 1.));
 
+    }
 }
 
-fn apply_forces(particles: Vec<Particle>) {
-
-}
-
-fn update_particles(particles: Vec<Particle>) {
-
+fn update_particles(particles: Vec<Rc<RefCell<Particle>>>, dt: f32) {
+    for particle in particles { particle.borrow_mut().update(dt); }
 }
 
 fn solve_links(links: Vec<Link>) {
-
+    for mut link in links { link.solve(); }
 }
 
 fn update_positions(circles: Vec<CircleShape>) {
@@ -48,8 +55,8 @@ fn main() -> SfResult<()> {
 
     let mut clock = Clock::start()?;
 
-    let mut particles: Vec<Particle> = vec![];
-    populate_particles(particles);
+    let mut particles: Vec<Rc<RefCell<Particle>>> = vec![];
+    populate_particles(particles, 3);
     let particle1 = Rc::new(RefCell::new(Particle::new(Vector2f::new(200., 300.))));
     let particle2 = Rc::new(RefCell::new(Particle::new(Vector2f::new(300., 300.))));
     let particle3 = Rc::new(RefCell::new(Particle::new(Vector2f::new(400., 300.))));
