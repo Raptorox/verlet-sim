@@ -35,9 +35,9 @@ fn populate_links(links: &mut Vec<Link>, particles: &Vec<Rc<RefCell<Particle>>>,
     for i in 0..(num-1) {
         let p1 = &particles[i as usize];
         let p2 = &particles[(i as usize)+1];
-        let vec = p2.borrow().pos - p1.borrow().pos;
-        let dist = (vec.x*vec.x + vec.y*vec.y).sqrt();
-        let link = Link::new(Rc::clone(p1), Rc::clone(p2), dist);
+        //let vec = p2.borrow().pos - p1.borrow().pos;
+        //let dist = (vec.x*vec.x + vec.y*vec.y).sqrt();
+        let link = Link::new(Rc::clone(p1), Rc::clone(p2), 100.);
 
         links.push(link);
     }
