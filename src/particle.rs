@@ -3,15 +3,19 @@ use sfml::system::Vector2f;
 pub struct Particle {
     pub pos: Vector2f,
     prev_pos: Vector2f,
-    accel: Vector2f
+    accel: Vector2f,
+
+    immovable: bool
 }
 
 impl Particle {
-    pub fn new(pos: Vector2f) -> Self {
+    pub fn new(pos: Vector2f, immovable: bool) -> Self {
         Particle {
             pos: pos,
             prev_pos: pos,
-            accel: Vector2f::default()
+            accel: Vector2f::default(),
+
+            immovable: immovable
         }
     }
 
@@ -20,7 +24,9 @@ impl Particle {
     }
 
     pub fn update(&mut self, dt: f32) {
-        let vel = (self.pos - self.prev_pos) * 0.99;
+        if self.immovable { return; }
+        let damping = 0.99;
+        let vel = (self.pos - self.prev_pos) * damping;
         let new_pos = self.pos + vel + self.accel * (dt * dt);
 
         self.prev_pos = self.pos;

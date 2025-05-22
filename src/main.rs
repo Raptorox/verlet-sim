@@ -11,11 +11,15 @@ use particle::Particle;
 mod link;
 use link::Link;
 
-//const GRAVITY: f32 = 100.;
+const GRAVITY: f32 = 100.;
 
-fn populate_particles(particles: &mut Vec<Rc<RefCell<Particle>>>, num: u32) {
+fn populate_particles(particles: &mut Vec<Rc<RefCell<Particle>>>, num: u32, cols: u32) {
     for i in 0..num {
-        particles.push(Rc::new(RefCell::new(Particle::new(Vector2f::new(300. + 100. * i as f32, 300.)))));
+        let x_pos = 200. + 50. * (i % cols) as f32;
+        let y_pos = 100. + 50. * (i / cols) as f32;
+        let immovable = i < cols;
+        let particle = Particle::new(Vector2f::new(x_pos, y_pos), immovable);
+        particles.push(Rc::new(RefCell::new(particle)));
     }
 }
 
@@ -39,11 +43,16 @@ fn populate_links(links: &mut Vec<Link>, particles: &Vec<Rc<RefCell<Particle>>>,
     }
 }
 
-fn apply_forces(particles: Vec<Rc<RefCell<Particle>>>) {
+/*fn populate_lines(lines: &mut Vec<RectangleShape>, circles: &Vec<CircleShape>, num: u32) {
+    for i in 0..num {
+        let rect = RectangleShape::with_size(Vector2f::new(100., 100.));
+    }
+}*/
+
+fn apply_forces(particles: &Vec<Rc<RefCell<Particle>>>) {
     for particle in particles {
         let mut borrowed = particle.borrow_mut();
-        // borrowed.apply_force(Vector2f::new(0., GRAVITY));
-        borrowed.apply_force(Vector2f::new(1., 1.));
+        borrowed.apply_force(Vector2f::new(0., GRAVITY));
 
     }
 }
@@ -62,10 +71,14 @@ fn update_positions(circles: &mut Vec<CircleShape>, particles: &Vec<Rc<RefCell<P
     }
 }
 
-fn draw_all(window: &mut RenderWindow, circles: &Vec<CircleShape>, /* links: Vec<Link> */ ) {
+fn draw_all(window: &mut RenderWindow, circles: &Vec<CircleShape>, /* lines: &Vec<RectangleShape> */) {
     for circle in circles {
         window.draw(circle);
     }
+
+    // for line in lines {
+    //     window.draw(line);
+    // }
 }
 
 fn main() -> SfResult<()> {
@@ -75,14 +88,15 @@ fn main() -> SfResult<()> {
         Style::CLOSE,
         &Default::default()
     )?;
-    window.set_framerate_limit(144);
+    window.set_framerate_limit(60);
 
     let mut clock = Clock::start()?;
 
-    let particle_count: u32 = 6;
+    let particle_count: u32 = 60;
+    let column_count: u32 = 10;
 
     let mut particles: Vec<Rc<RefCell<Particle>>> = vec![];
-    populate_particles(&mut particles, particle_count);
+    populate_particles(&mut particles, particle_count, column_count);
 
     let mut links: Vec<Link> = vec![];
     populate_links(&mut links, &particles, particle_count);
@@ -92,6 +106,9 @@ fn main() -> SfResult<()> {
     let point_count: usize = 100;
     let mut circles: Vec<CircleShape> = vec![];
     populate_circles(&mut circles, particle_count, radius, point_count);
+
+    // let mut lines: Vec<RectangleShape> = vec![];
+    // populate_lines(&mut lines, &circles, particle_count);
 
     while window.is_open() {
         while let Some(event) = window.poll_event() {
@@ -104,14 +121,15 @@ fn main() -> SfResult<()> {
         if mouse::Button::is_pressed(mouse::Button::Left) {
             let mouse_pos = window.mouse_position();
             let mouse_coords = window.map_pixel_to_coords_current_view(mouse_pos);
-            let p_pos = particles[0].borrow().pos;
-            particles[0].borrow_mut().apply_force((mouse_coords - p_pos)*8.);
+            let p_pos = particles[10].borrow().pos;
+            particles[10].borrow_mut().apply_force((mouse_coords - p_pos)*4.);
         }
 
         let dt = clock.restart().as_seconds();
 
         //particle.apply_force(Vector2f::new(0., GRAVITY));
 
+        apply_forces(&particles);
         update_particles(&particles, dt);
 
         solve_links(&mut links);
@@ -119,7 +137,7 @@ fn main() -> SfResult<()> {
         update_positions(&mut circles, &particles);
 
         window.clear(Color::BLACK);
-        draw_all(&mut window, &circles);
+        draw_all(&mut window, &circles, /* &lines */);
         window.display();
     }
 

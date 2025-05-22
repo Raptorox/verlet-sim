@@ -21,9 +21,16 @@ impl Link {
         let vec = self.p2.borrow().pos - self.p1.borrow().pos;
         let vec_len = (vec.x*vec.x + vec.y*vec.y).sqrt();
         let vec_norm = vec/vec_len;
-        let vec_scaled = vec_norm * (self.length-vec_len) * 99.;
 
-        self.p1.borrow_mut().apply_force(-vec_scaled);
-        self.p2.borrow_mut().apply_force(vec_scaled);
+        let max_stretch = 50.;
+        let clamped_len = vec_len.min(self.length + max_stretch);
+
+        let displacement = clamped_len - vec_len;
+        let stiffness = 99.;
+        let vec_scaled = vec_norm * displacement * stiffness;
+
+        let damping = 0.98;
+        self.p1.borrow_mut().apply_force(-vec_scaled * damping);
+        self.p2.borrow_mut().apply_force(vec_scaled * damping);
     }
 }
