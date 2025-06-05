@@ -5,26 +5,28 @@ pub struct Particle {
     prev_pos: Vector2f,
     accel: Vector2f,
 
-    immovable: bool
+    immovable: bool,
 }
 
 impl Particle {
     pub fn new(pos: Vector2f, immovable: bool) -> Self {
         Particle {
-            pos: pos,
+            pos,
             prev_pos: pos,
             accel: Vector2f::default(),
 
-            immovable: immovable
+            immovable,
         }
     }
 
     pub fn apply_force(&mut self, force: Vector2f) {
+        if self.immovable {
+            return;
+        }
         self.accel += force;
     }
 
     pub fn update(&mut self, dt: f32) {
-        if self.immovable { return; }
         let damping = 0.99;
         let vel = (self.pos - self.prev_pos) * damping;
         let new_pos = self.pos + vel + self.accel * (dt * dt);
