@@ -16,7 +16,7 @@ use link::Link;
 const WIN_WIDTH: u32 = 800;
 const WIN_HEIGHT: u32 = 600;
 
-const GRAVITY: f32 = 100.;
+const GRAVITY: Vector2f = Vector2f::new(0., 100.);
 
 fn populate_particles(particles: &mut Vec<Rc<RefCell<Particle>>>, num: u32, cols: u32) {
     for i in 0..num {
@@ -24,7 +24,7 @@ fn populate_particles(particles: &mut Vec<Rc<RefCell<Particle>>>, num: u32, cols
         let x_pos = (WIN_WIDTH/2 - cols/2*OFFSET + OFFSET * (i % cols)) as f32;
         let y_pos = (WIN_HEIGHT/2 - (num/cols)/2*OFFSET + OFFSET * (i / cols)) as f32;
         let immovable = i < cols;
-        let particle = Particle::new(Vector2f::new(x_pos, y_pos), immovable);
+        let particle = Particle::new((x_pos, y_pos), immovable);
         particles.push(Rc::new(RefCell::new(particle)));
     }
 }
@@ -73,7 +73,7 @@ fn populate_links(
 fn apply_forces(particles: &Vec<Rc<RefCell<Particle>>>) {
     for particle in particles {
         let mut borrowed = particle.borrow_mut();
-        borrowed.apply_force(Vector2f::new(0., GRAVITY));
+        borrowed.apply_force(GRAVITY);
     }
 }
 
@@ -166,8 +166,6 @@ fn main() -> SfResult<()> {
         }
 
         let dt = clock.restart().as_seconds();
-
-        //particle.apply_force(Vector2f::new(0., GRAVITY));
 
         
         apply_forces(&particles);

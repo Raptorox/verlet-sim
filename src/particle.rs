@@ -9,7 +9,8 @@ pub struct Particle {
 }
 
 impl Particle {
-    pub fn new(pos: Vector2f, immovable: bool) -> Self {
+    pub fn new<P: Into<Vector2f>>(pos: P, immovable: bool) -> Self {
+        let pos = pos.into();
         Particle {
             pos,
             prev_pos: pos,
@@ -19,11 +20,11 @@ impl Particle {
         }
     }
 
-    pub fn apply_force(&mut self, force: Vector2f) {
+    pub fn apply_force<F: Into<Vector2f>>(&mut self, force: F) {
         if self.immovable {
             return;
         }
-        self.accel += force;
+        self.accel += force.into();
     }
 
     pub fn update(&mut self, dt: f32) {
