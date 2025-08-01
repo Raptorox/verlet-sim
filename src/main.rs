@@ -22,9 +22,9 @@ const SUBSTEP_COUNT: u32 = 16;
 
 fn populate_particles(particles: &mut Vec<Rc<RefCell<Particle>>>, num: u32, cols: u32) {
     for i in 0..num {
-        const OFFSET: u32 = 20;
-        let x_pos = (WIN_WIDTH/2 - cols/2*OFFSET + OFFSET * (i % cols)) as f32;
-        let y_pos = (WIN_HEIGHT/2 - (num/cols)/2*OFFSET + OFFSET * (i / cols)) as f32;
+        const OFFSET: u32 = 10;
+        let x_pos = (/* WIN_WIDTH/2 - cols/2*OFFSET */ 40 + OFFSET * (i % cols)) as f32;
+        let y_pos = (/* WIN_HEIGHT/2 - (num/cols)/2*OFFSET */ 40 + OFFSET * (i / cols)) as f32;
         let immovable = i < cols;
         let particle = Particle::new((x_pos, y_pos), immovable);
         particles.push(Rc::new(RefCell::new(particle)));
@@ -127,8 +127,8 @@ fn main() -> SfResult<()> {
     let mouse_pos_prev = window.mouse_position();
     let mut mouse_coords_prev = window.map_pixel_to_coords_current_view(mouse_pos_prev);
 
-    let particle_count: u32 = 600;
-    let column_count: u32 = 30;
+    let particle_count: u32 = 2000;
+    let column_count: u32 = 50;
     let row_count: u32 = particle_count / column_count;
 
     let mut particles: Vec<Rc<RefCell<Particle>>> = vec![];
@@ -143,7 +143,7 @@ fn main() -> SfResult<()> {
     );
     // let mut link3 = Link::new(Rc::clone(&(particles[0])), Rc::clone(&(particles[2])), 200.);
 
-    let radius: f32 = 8.;
+    let radius: f32 = 1.;
     let point_count: usize = 100;
     let mut circles: Vec<CircleShape> = vec![];
     populate_circles(&mut circles, particle_count, radius, point_count);
@@ -169,7 +169,7 @@ fn main() -> SfResult<()> {
                 let p_pos = particle.borrow().pos;
                 let dist_vec = mouse_coords - p_pos;
                 let dist = math::vec_len(dist_vec);
-                if dist < 20. {
+                if dist < 40. {
                     particle.borrow_mut().apply_force(mouse_vel * 8000.);
                 }
             }
