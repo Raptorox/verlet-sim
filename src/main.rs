@@ -16,7 +16,9 @@ use link::Link;
 const WIN_WIDTH: u32 = 800;
 const WIN_HEIGHT: u32 = 600;
 
-const GRAVITY: Vector2f = Vector2f::new(0., 100.);
+const GRAVITY: Vector2f = Vector2f::new(0., 1500.);
+
+const SUBSTEP_COUNT: u32 = 16;
 
 fn populate_particles(particles: &mut Vec<Rc<RefCell<Particle>>>, num: u32, cols: u32) {
     for i in 0..num {
@@ -72,8 +74,10 @@ fn populate_links(
 
 fn apply_forces(particles: &Vec<Rc<RefCell<Particle>>>) {
     for particle in particles {
+        let velocity = particle.borrow().vel;
         let mut borrowed = particle.borrow_mut();
         borrowed.apply_force(GRAVITY);
+        borrowed.apply_force(-(velocity * 0.5));
     }
 }
 
@@ -86,6 +90,12 @@ fn update_particles(particles: &Vec<Rc<RefCell<Particle>>>, dt: f32) {
 fn solve_links(links: &mut Vec<Link>) {
     for link in links {
         link.solve();
+    }
+}
+
+fn update_particle_derivatives(particles: &Vec<Rc<RefCell<Particle>>>, dt: f32) {
+    for particle in particles {
+        particle.borrow_mut().update_derivatives(dt);
     }
 }
 
@@ -160,20 +170,21 @@ fn main() -> SfResult<()> {
                 let dist_vec = mouse_coords - p_pos;
                 let dist = math::vec_len(dist_vec);
                 if dist < 20. {
-                    particle.borrow_mut().apply_force(mouse_vel * 128.);
+                    particle.borrow_mut().apply_force(mouse_vel * 8000.);
                 }
             }
         }
 
         let dt = clock.restart().as_seconds();
-
+        let substep_dt = dt/SUBSTEP_COUNT as f32;
         
-        apply_forces(&particles);
-        update_particles(&particles, dt);
-
-        solve_links(&mut links);
-
-        update_positions(&mut circles, &particles);
+        for _ in 0..SUBSTEP_COUNT {
+            apply_forces(&particles);
+            update_particles(&particles, substep_dt);
+            solve_links(&mut links);
+            update_particle_derivatives(&particles, substep_dt);
+            update_positions(&mut circles, &particles);
+        }
 
         window.clear(Color::BLACK);
         draw_all(&mut window, &circles /* &lines */);

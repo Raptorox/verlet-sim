@@ -3,6 +3,7 @@ use sfml::system::Vector2f;
 pub struct Particle {
     pub pos: Vector2f,
     prev_pos: Vector2f,
+    pub vel: Vector2f,
     accel: Vector2f,
 
     immovable: bool,
@@ -14,6 +15,7 @@ impl Particle {
         Particle {
             pos,
             prev_pos: pos,
+            vel: Vector2f::default(),
             accel: Vector2f::default(),
 
             immovable,
@@ -21,19 +23,23 @@ impl Particle {
     }
 
     pub fn apply_force<F: Into<Vector2f>>(&mut self, force: F) {
-        if self.immovable {
-            return;
-        }
         self.accel += force.into();
     }
 
     pub fn update(&mut self, dt: f32) {
-        let damping = 0.99;
-        let vel = (self.pos - self.prev_pos) * damping;
-        let new_pos = self.pos + vel + self.accel * (dt * dt);
-
+        if self.immovable {return}
         self.prev_pos = self.pos;
-        self.pos = new_pos;
+        self.vel += self.accel * dt;
+        self.pos += self.vel * dt;
+    }
+
+    pub fn update_derivatives(&mut self, dt: f32) {
+        self.vel = (self.pos - self.prev_pos) / dt;
         self.accel = Vector2f::default();
+    }
+
+    pub fn apply_vel(&mut self, vel: Vector2f) {
+        if self.immovable {return}
+        self.pos += vel;
     }
 }

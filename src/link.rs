@@ -22,12 +22,10 @@ impl Link {
             let vec_norm = vec / vec_len;
 
             let displacement = self.length - vec_len;
-            let stiffness = 999.;
-            let vec_scaled = vec_norm * displacement * stiffness;
+            let vec_scaled = vec_norm * displacement / 2.;
 
-            let damping = 0.99;
-            self.p1.borrow_mut().apply_force(-vec_scaled * damping);
-            self.p2.borrow_mut().apply_force(vec_scaled * damping);
+            self.p1.borrow_mut().apply_vel(-vec_scaled);
+            self.p2.borrow_mut().apply_vel(vec_scaled);
         }
     }
 }
