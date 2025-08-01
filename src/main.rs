@@ -5,18 +5,24 @@ use sfml::window::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+mod math;
+
 mod particle;
 use particle::Particle;
 
 mod link;
 use link::Link;
 
+const WIN_WIDTH: u32 = 800;
+const WIN_HEIGHT: u32 = 600;
+
 const GRAVITY: f32 = 100.;
 
 fn populate_particles(particles: &mut Vec<Rc<RefCell<Particle>>>, num: u32, cols: u32) {
     for i in 0..num {
-        let x_pos = 150. + 20. * (i % cols) as f32;
-        let y_pos = 80. + 20. * (i / cols) as f32;
+        const OFFSET: u32 = 20;
+        let x_pos = (WIN_WIDTH/2 - cols/2*OFFSET + OFFSET * (i % cols)) as f32;
+        let y_pos = (WIN_HEIGHT/2 - (num/cols)/2*OFFSET + OFFSET * (i / cols)) as f32;
         let immovable = i < cols;
         let particle = Particle::new(Vector2f::new(x_pos, y_pos), immovable);
         particles.push(Rc::new(RefCell::new(particle)));
@@ -31,18 +37,6 @@ fn populate_circles(circles: &mut Vec<CircleShape>, num: u32, rad: f32, pts: usi
     }
 }
 
-/*fn populate_links(links: &mut Vec<Link>, particles: &[Rc<RefCell<Particle>>], num: u32) {
-    for i in 0..(num - 1) {
-        let p1 = &particles[i as usize];
-        let p2 = &particles[(i as usize) + 1];
-        //let vec = p2.borrow().pos - p1.borrow().pos;
-        //let dist = (vec.x*vec.x + vec.y*vec.y).sqrt();
-        let link = Link::new(Rc::clone(p1), Rc::clone(p2), 100.);
-
-        links.push(link);
-    }
-}*/
-
 fn populate_links(
     links: &mut Vec<Link>,
     particles: &[Rc<RefCell<Particle>>],
@@ -55,13 +49,15 @@ fn populate_links(
 
             if x < width - 1 {
                 let right = i + 1;
-                let link = Link::new(Rc::clone(&particles[i]), Rc::clone(&particles[right]), 20.);
+                let dist = math::vec_len(particles[i].borrow().pos - particles[right].borrow().pos);
+                let link = Link::new(Rc::clone(&particles[i]), Rc::clone(&particles[right]), dist);
                 links.push(link);
             }
 
             if y < height - 1 {
                 let below = i + width;
-                let link = Link::new(Rc::clone(&particles[i]), Rc::clone(&particles[below]), 20.);
+                let dist = math::vec_len(particles[i].borrow().pos - particles[below].borrow().pos);
+                let link = Link::new(Rc::clone(&particles[i]), Rc::clone(&particles[below]), dist);
                 links.push(link);
             }
         }
@@ -113,7 +109,7 @@ fn draw_all(
 }
 
 fn main() -> SfResult<()> {
-    let mut window = RenderWindow::new((800, 600), "Verlet", Style::CLOSE, &Default::default())?;
+    let mut window = RenderWindow::new((WIN_WIDTH, WIN_HEIGHT), "Verlet", Style::CLOSE, &Default::default())?;
     window.set_framerate_limit(60);
 
     let mut clock = Clock::start()?;
@@ -147,7 +143,6 @@ fn main() -> SfResult<()> {
 
     while window.is_open() {
         while let Some(event) = window.poll_event() {
-            #[allow(clippy::single_match)]
             match event {
                 Event::Closed => window.close(),
                 _ => {}
@@ -163,7 +158,7 @@ fn main() -> SfResult<()> {
             for particle in &particles {
                 let p_pos = particle.borrow().pos;
                 let dist_vec = mouse_coords - p_pos;
-                let dist = (dist_vec.x * dist_vec.x + dist_vec.y * dist_vec.y).sqrt();
+                let dist = math::vec_len(dist_vec);
                 if dist < 20. {
                     particle.borrow_mut().apply_force(mouse_vel * 128.);
                 }
@@ -174,6 +169,7 @@ fn main() -> SfResult<()> {
 
         //particle.apply_force(Vector2f::new(0., GRAVITY));
 
+        
         apply_forces(&particles);
         update_particles(&particles, dt);
 
